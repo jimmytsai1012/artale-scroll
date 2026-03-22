@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maple Scroll Tracker v8 - By jimmytsai</title>
+    <title>Artale 墊卷計算器</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -46,19 +46,19 @@
 <body>
 
 <div class="container">
-    <h2>MAPLE SCROLL TRACKER</h2>
+    <h2>ARTALE SCROLL TRACKER</h2>
     
     <div class="dashboard">
         <div class="stat-box">
-            <span class="stat-label">當前連爆次數</span>
+            <span class="stat-label">失敗次數</span>
             <span id="currentWait" class="stat-value" style="color:var(--accent-red)">0</span>
         </div>
         <div class="stat-box">
-            <span class="stat-label">即時總成功率</span>
+            <span class="stat-label">單次總成功率</span>
             <span id="realtimeRate" class="stat-value" style="color:var(--accent-yellow)">0.00%</span>
         </div>
         <div class="stat-box">
-            <span class="stat-label">已成功次數</span>
+            <span class="stat-label">成功次數</span>
             <span id="totalSuccDisplay" class="stat-value" style="color:var(--accent-green)">0</span>
         </div>
     </div>
@@ -73,11 +73,11 @@
     <table id="recordTable">
         <thead>
             <tr>
-                <th>成功序號</th>
-                <th>消耗(n)</th>
-                <th>機率(1/n)</th>
-                <th>累計消耗</th>
-                <th>結算成功率</th>
+                <th>#</th>
+                <th>此次墊卷數量(n)</th>
+                <th>單次成功率(1/墊了幾張會成功)</th>
+                <th>累計墊卷數</th>
+                <th>總成功率</th>
             </tr>
         </thead>
         <tbody></tbody>
