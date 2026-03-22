@@ -2,38 +2,45 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Artale墊卷紀錄器 v4</title>
+    <title>楓之谷墊卷紀錄器 v6</title>
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f2f5; }
         .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+        .status-bar { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; font-weight: bold; }
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
         input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 80px; font-size: 16px; }
         button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-success { background: #28a745; color: white; }
         .btn-fail { background: #dc3545; color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        th { background: #f8f9fa; position: sticky; top: 0; }
-        .row-success { background-color: #e8f5e9; font-weight: bold; color: #2e7d32; }
-        .row-fail { color: #999; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        th { background: #f8f9fa; }
+        .highlight { color: #007bff; font-weight: bold; }
+        .accumulated { color: #dc3545; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>墊卷紀錄器</h2>
+        <h2>🍁 墊卷結算紀錄器</h2>
+        
+        <div class="status-bar">
+            <span>目前累計消耗 (未成功)：<span id="currentWait" class="accumulated">0</span></span>
+            <span>總成功次數：<span id="totalSuccDisplay">0</span></span>
+        </div>
+
         <div class="controls">
-            <span>消耗卷數：</span>
+            <span>輸入卷數：</span>
             <input type="number" id="tries" value="1" min="1">
-            <button class="btn-success" onclick="processAction(true)">成功</button>
-            <button class="btn-fail" onclick="processAction(false)">失敗</button>
-            <button onclick="location.reload()" style="background:#6c757d; color:white;">清空</button>
+            <button class="btn-fail" onclick="addFail()">紀錄失敗 (累加)</button>
+            <button class="btn-success" onclick="addSuccess()">紀錄成功 (並結算)</button>
+            <button onclick="if(confirm('重置？')) location.reload()" style="background:#6c757d; color:white;">清空</button>
         </div>
 
         <table id="recordTable">
             <thead>
                 <tr>
-                    <th>總序號</th>
-                    <th>狀態</th>
+                    <th>成功序號</th>
+                    <th>該次總消耗 (含前面失敗)</th>
                     <th>單次成功率 (1/n)</th>
                     <th>累計總消耗</th>
                     <th>總成功率</th>
@@ -44,43 +51,50 @@
     </div>
 
     <script>
-        let totalClicks = 0;
-        let totalSuccesses = 0;
-        let currentBatchTries = 0;
+        let globalTotalConsumes = 0; // 歷史總消耗
+        let globalSuccessCount = 0;  // 歷史總成功
+        let currentCycleConsumes = 0; // 這一輪(尚未成功前)的消耗
 
-        function processAction(isFinalSuccess) {
+        function updateUI() {
+            document.getElementById('currentWait').innerText = currentCycleConsumes;
+            document.getElementById('totalSuccDisplay').innerText = globalSuccessCount;
+        }
+
+        function addFail() {
+            const count = parseInt(document.getElementById('tries').value);
+            if (isNaN(count) || count <= 0) return;
+            
+            currentCycleConsumes += count;
+            globalTotalConsumes += count;
+            updateUI();
+            document.getElementById('tries').value = 1;
+        }
+
+        function addSuccess() {
             const count = parseInt(document.getElementById('tries').value);
             if (isNaN(count) || count <= 0) return;
 
+            // 結算這一輪
+            currentCycleConsumes += count;
+            globalTotalConsumes += count;
+            globalSuccessCount++;
+
+            const singleRate = ((1 / currentCycleConsumes) * 100).toFixed(2) + '%';
+            const overallRate = ((globalSuccessCount / globalTotalConsumes) * 100).toFixed(2) + '%';
+
             const tbody = document.getElementById('recordTable').querySelector('tbody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${globalSuccessCount}</td>
+                <td>${currentCycleConsumes}</td>
+                <td class="highlight">${singleRate}</td>
+                <td>${globalTotalConsumes}</td>
+                <td>${overallRate}</td>
+            `;
 
-            for (let i = 1; i <= count; i++) {
-                totalClicks++;
-                currentBatchTries++;
-                
-                // 判斷這「一小行」是成功還是失敗
-                // 如果按「失敗」，全部都是失敗；如果按「成功」，只有最後一行是成功
-                const isThisRowSuccess = isFinalSuccess && (i === count);
-                if (isThisRowSuccess) totalSuccesses++;
-
-                const singleRate = isThisRowSuccess ? ((1 / currentBatchTries) * 100).toFixed(2) + '%' : '-';
-                const overallRate = ((totalSuccesses / totalClicks) * 100).toFixed(2) + '%';
-                
-                const row = tbody.insertRow();
-                row.className = isThisRowSuccess ? 'row-success' : 'row-fail';
-                
-                row.innerHTML = `
-                    <td>${totalClicks}</td>
-                    <td>${isThisRowSuccess ? '★ 成功' : '失敗'}</td>
-                    <td>${singleRate}</td>
-                    <td>${totalClicks}</td>
-                    <td>${overallRate}</td>
-                `;
-
-                if (isThisRowSuccess) currentBatchTries = 0;
-            }
-            
-            // 重置輸入框為 1，方便下次操作
+            // 重置這一輪的計數
+            currentCycleConsumes = 0;
+            updateUI();
             document.getElementById('tries').value = 1;
             window.scrollTo(0, document.body.scrollHeight);
         }
