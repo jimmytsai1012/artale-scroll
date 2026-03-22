@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>楓之谷墊卷紀錄器</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>墊卷數據追蹤</h2>
+        <label>本次消耗卷軸數：</label>
+        <input type="number" id="tries" value="1">
+        <button onclick="addRecord(true)">成功</button>
+        <button onclick="addRecord(false)">失敗 (僅紀錄消耗)</button>
+        
+        <table id="recordTable">
+            <thead>
+                <tr>
+                    <th>序號</th>
+                    <th>結果</th>
+                    <th>單次消耗</th>
+                    <th>總消耗</th>
+                    <th>總成功率</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        let totalConsumes = 0;
+        let totalSuccess = 0;
+        let recordCount = 0;
+
+        function addRecord(isSuccess) {
+            const tries = parseInt(document.getElementById('tries').value);
+            totalConsumes += tries;
+            if(isSuccess) {
+                totalSuccess++;
+                recordCount++;
+                const rate = ((totalSuccess / totalConsumes) * 100).toFixed(2) + '%';
+                
+                const table = document.getElementById('recordTable').getElementsByTagName('tbody')[0];
+                const row = table.insertRow(0); // 新紀錄在最上方
+                row.innerHTML = `<td>${recordCount}</td><td>成功</td><td>${tries}</td><td>${totalConsumes}</td><td>${rate}</td>`;
+            } else {
+                alert(`已累計消耗 ${tries} 卷，目前總消耗: ${totalConsumes}`);
+            }
+        }
+    </script>
+</body>
+</html>
