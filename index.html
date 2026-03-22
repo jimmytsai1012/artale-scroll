@@ -2,92 +2,72 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>楓之谷墊卷紀錄器 v2</title>
+    <title>Artale墊卷紀錄器 v3</title>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
+        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f2f5; }
         .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 80px; }
-        button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
         .btn-success { background: #28a745; color: white; }
         .btn-fail { background: #dc3545; color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
-        th { background: #f8f9fa; color: #666; }
-        tr:nth-child(even) { background: #fafafa; }
-        .highlight { font-weight: bold; color: #007bff; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
+        th { background: #f8f9fa; }
+        .row-success { background-color: #e8f5e9; font-weight: bold; }
+        .row-fail { color: #666; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>墊卷數據觀測站</h2>
+        <h2>墊卷紀錄器</h2>
         <div class="controls">
-            <span>本次墊卷消耗：</span>
-            <input type="number" id="tries" value="1" min="1">
-            <button class="btn-success" onclick="addRecord(true)">成功 (紀錄並重置)</button>
-            <button class="btn-fail" onclick="addRecord(false)">失敗 (僅增加消耗)</button>
-            <button onclick="resetAll()" style="background:#6c757d; color:white;">清除所有紀錄</button>
+            <button class="btn-success" onclick="addAction(true)">✅ 成功</button>
+            <button class="btn-fail" onclick="addAction(false)">❌ 失敗</button>
+            <button onclick="location.reload()" style="background:#6c757d; color:white;">重置</button>
         </div>
 
         <table id="recordTable">
             <thead>
                 <tr>
-                    <th>序號</th>
+                    <th>總序號</th>
                     <th>結果</th>
-                    <th>本次消耗 (失敗次數+1)</th>
-                    <th>單次成功率 (1/消耗)</th>
+                    <th>單次成功率 (1/當前消耗)</th>
                     <th>累計總消耗</th>
                     <th>總成功率</th>
                 </tr>
             </thead>
-            <tbody>
-                </tbody>
+            <tbody></tbody>
         </table>
     </div>
 
     <script>
-        let totalConsumes = 0;
-        let totalSuccessCount = 0;
-        let currentBatchTries = 0; // 紀錄目前這一次成功前累積的失敗+最後一次成功
+        let totalClicks = 0;       // 總序號 (總點擊次數)
+        let totalSuccesses = 0;    // 總成功數
+        let currentBatchTries = 0; // 自上次成功後的點擊數
 
-        function addRecord(isSuccess) {
-            const inputVal = parseInt(document.getElementById('tries').value);
-            if (isNaN(inputVal) || inputVal <= 0) return alert("請輸入有效的次數");
+        function addAction(isSuccess) {
+            totalClicks++;
+            currentBatchTries++;
+            
+            if (isSuccess) totalSuccesses++;
 
-            currentBatchTries += inputVal;
-            totalConsumes += inputVal;
+            const singleRate = isSuccess ? ((1 / currentBatchTries) * 100).toFixed(2) + '%' : '-';
+            const overallRate = ((totalSuccesses / totalClicks) * 100).toFixed(2) + '%';
+            
+            const tbody = document.getElementById('recordTable').querySelector('tbody');
+            const row = tbody.insertRow();
+            row.className = isSuccess ? 'row-success' : 'row-fail';
+            
+            row.innerHTML = `
+                <td>${totalClicks}</td>
+                <td>${isSuccess ? '成功' : '失敗'}</td>
+                <td>${singleRate}</td>
+                <td>${totalClicks}</td>
+                <td>${overallRate}</td>
+            `;
 
-            if (isSuccess) {
-                totalSuccessCount++;
-                const singleRate = ((1 / currentBatchTries) * 100).toFixed(2) + '%';
-                const overallRate = ((totalSuccessCount / totalConsumes) * 100).toFixed(2) + '%';
-                
-                const tbody = document.getElementById('recordTable').querySelector('tbody');
-                const row = tbody.insertRow(); // insertRow() 預設就是加在最後面（由上往下）
-                
-                row.innerHTML = `
-                    <td>${totalSuccessCount}</td>
-                    <td style="color:green; font-weight:bold;">成功</td>
-                    <td>${currentBatchTries}</td>
-                    <td class="highlight">${singleRate}</td>
-                    <td>${totalConsumes}</td>
-                    <td>${overallRate}</td>
-                `;
-                
-                // 成功後重置當前批次計數
-                currentBatchTries = 0;
-                document.getElementById('tries').value = 1;
-                window.scrollTo(0, document.body.scrollHeight); // 自動捲動到底部
-            } else {
-                alert(`目前此輪已累計消耗：${currentBatchTries} 卷`);
-                document.getElementById('tries').value = 1;
-            }
-        }
-
-        function resetAll() {
-            if(confirm("確定要清空所有數據嗎？")) {
-                location.reload();
-            }
+            if (isSuccess) currentBatchTries = 0; // 成功後，重置單次計數
+            window.scrollTo(0, document.body.scrollHeight);
         }
     </script>
 </body>
