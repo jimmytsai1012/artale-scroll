@@ -2,36 +2,39 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>Artale墊卷紀錄器 v3</title>
+    <title>Artale墊卷紀錄器 v4</title>
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f2f5; }
         .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; }
-        button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 80px; font-size: 16px; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-success { background: #28a745; color: white; }
         .btn-fail { background: #dc3545; color: white; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #eee; padding: 10px; text-align: center; }
-        th { background: #f8f9fa; }
-        .row-success { background-color: #e8f5e9; font-weight: bold; }
-        .row-fail { color: #666; }
+        th { background: #f8f9fa; position: sticky; top: 0; }
+        .row-success { background-color: #e8f5e9; font-weight: bold; color: #2e7d32; }
+        .row-fail { color: #999; }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>墊卷紀錄器</h2>
         <div class="controls">
-            <button class="btn-success" onclick="addAction(true)">✅ 成功</button>
-            <button class="btn-fail" onclick="addAction(false)">❌ 失敗</button>
-            <button onclick="location.reload()" style="background:#6c757d; color:white;">重置</button>
+            <span>消耗卷數：</span>
+            <input type="number" id="tries" value="1" min="1">
+            <button class="btn-success" onclick="processAction(true)">成功</button>
+            <button class="btn-fail" onclick="processAction(false)">失敗</button>
+            <button onclick="location.reload()" style="background:#6c757d; color:white;">清空</button>
         </div>
 
         <table id="recordTable">
             <thead>
                 <tr>
                     <th>總序號</th>
-                    <th>結果</th>
-                    <th>單次成功率 (1/當前消耗)</th>
+                    <th>狀態</th>
+                    <th>單次成功率 (1/n)</th>
                     <th>累計總消耗</th>
                     <th>總成功率</th>
                 </tr>
@@ -41,32 +44,44 @@
     </div>
 
     <script>
-        let totalClicks = 0;       // 總序號 (總點擊次數)
-        let totalSuccesses = 0;    // 總成功數
-        let currentBatchTries = 0; // 自上次成功後的點擊數
+        let totalClicks = 0;
+        let totalSuccesses = 0;
+        let currentBatchTries = 0;
 
-        function addAction(isSuccess) {
-            totalClicks++;
-            currentBatchTries++;
-            
-            if (isSuccess) totalSuccesses++;
+        function processAction(isFinalSuccess) {
+            const count = parseInt(document.getElementById('tries').value);
+            if (isNaN(count) || count <= 0) return;
 
-            const singleRate = isSuccess ? ((1 / currentBatchTries) * 100).toFixed(2) + '%' : '-';
-            const overallRate = ((totalSuccesses / totalClicks) * 100).toFixed(2) + '%';
-            
             const tbody = document.getElementById('recordTable').querySelector('tbody');
-            const row = tbody.insertRow();
-            row.className = isSuccess ? 'row-success' : 'row-fail';
-            
-            row.innerHTML = `
-                <td>${totalClicks}</td>
-                <td>${isSuccess ? '成功' : '失敗'}</td>
-                <td>${singleRate}</td>
-                <td>${totalClicks}</td>
-                <td>${overallRate}</td>
-            `;
 
-            if (isSuccess) currentBatchTries = 0; // 成功後，重置單次計數
+            for (let i = 1; i <= count; i++) {
+                totalClicks++;
+                currentBatchTries++;
+                
+                // 判斷這「一小行」是成功還是失敗
+                // 如果按「失敗」，全部都是失敗；如果按「成功」，只有最後一行是成功
+                const isThisRowSuccess = isFinalSuccess && (i === count);
+                if (isThisRowSuccess) totalSuccesses++;
+
+                const singleRate = isThisRowSuccess ? ((1 / currentBatchTries) * 100).toFixed(2) + '%' : '-';
+                const overallRate = ((totalSuccesses / totalClicks) * 100).toFixed(2) + '%';
+                
+                const row = tbody.insertRow();
+                row.className = isThisRowSuccess ? 'row-success' : 'row-fail';
+                
+                row.innerHTML = `
+                    <td>${totalClicks}</td>
+                    <td>${isThisRowSuccess ? '★ 成功' : '失敗'}</td>
+                    <td>${singleRate}</td>
+                    <td>${totalClicks}</td>
+                    <td>${overallRate}</td>
+                `;
+
+                if (isThisRowSuccess) currentBatchTries = 0;
+            }
+            
+            // 重置輸入框為 1，方便下次操作
+            document.getElementById('tries').value = 1;
             window.scrollTo(0, document.body.scrollHeight);
         }
     </script>
