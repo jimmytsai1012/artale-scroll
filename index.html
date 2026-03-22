@@ -2,58 +2,161 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>楓之谷墊卷紀錄器 v6</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maple Scroll Tracker - By jimmytsai</title>
     <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f2f5; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .status-bar { background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-around; font-weight: bold; }
-        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
-        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 80px; font-size: 16px; }
-        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-fail { background: #dc3545; color: white; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
-        th { background: #f8f9fa; }
-        .highlight { color: #007bff; font-weight: bold; }
-        .accumulated { color: #dc3545; }
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-main: #e0e0e0;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            --accent-blue: #3498db;
+            --border-color: #404040;
+        }
+
+        body { 
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; 
+            padding: 20px; 
+            background: var(--bg-color); 
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .container { 
+            max-width: 900px; 
+            margin: auto; 
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5); 
+        }
+
+        h2 { text-align: center; color: var(--accent-blue); margin-top: 0; letter-spacing: 2px; }
+
+        .status-bar { 
+            background: rgba(255,255,255,0.05); 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 25px; 
+            display: flex; 
+            justify-content: space-around; 
+            border: 1px solid var(--border-color);
+        }
+
+        .status-item { text-align: center; }
+        .status-label { font-size: 0.85rem; color: #888; display: block; margin-bottom: 5px; }
+        .status-value { font-size: 1.2rem; font-weight: bold; }
+
+        .controls { 
+            display: flex; 
+            gap: 12px; 
+            align-items: center; 
+            justify-content: center;
+            margin-bottom: 30px; 
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        input { 
+            padding: 12px; 
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 8px; 
+            width: 80px; 
+            font-size: 16px; 
+            color: white;
+            text-align: center;
+        }
+
+        button { 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active { transform: scale(0.95); }
+
+        .btn-success { background: var(--accent-green); color: #000; }
+        .btn-fail { background: var(--accent-red); color: white; }
+        .btn-reset { background: #555; color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { 
+            background: #252525; 
+            color: #aaa; 
+            font-weight: 500; 
+            padding: 15px; 
+            border-bottom: 2px solid var(--border-color);
+        }
+        td { padding: 15px; border-bottom: 1px solid var(--border-color); text-align: center; }
+
+        .highlight-blue { color: var(--accent-blue); font-weight: bold; }
+        .accumulated { color: var(--accent-red); font-size: 1.4rem; }
+        
+        .footer { 
+            margin-top: 30px; 
+            text-align: right; 
+            font-size: 0.8rem; 
+            color: #666; 
+            font-style: italic;
+        }
+
+        /* 滾動條美化 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🍁 墊卷結算紀錄器</h2>
+        <h2>🍁 MAPLE SCROLL TRACKER</h2>
         
         <div class="status-bar">
-            <span>目前累計消耗 (未成功)：<span id="currentWait" class="accumulated">0</span></span>
-            <span>總成功次數：<span id="totalSuccDisplay">0</span></span>
+            <div class="status-item">
+                <span class="status-label">當前累積消耗 (未成功)</span>
+                <span id="currentWait" class="status-value accumulated">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">總成功紀錄</span>
+                <span id="totalSuccDisplay" class="status-value" style="color:var(--accent-green)">0</span>
+            </div>
         </div>
 
         <div class="controls">
-            <span>輸入卷數：</span>
+            <span>消耗卷數：</span>
             <input type="number" id="tries" value="1" min="1">
-            <button class="btn-fail" onclick="addFail()">紀錄失敗 (累加)</button>
-            <button class="btn-success" onclick="addSuccess()">紀錄成功 (並結算)</button>
-            <button onclick="if(confirm('重置？')) location.reload()" style="background:#6c757d; color:white;">清空</button>
+            <button class="btn-fail" onclick="addFail()">紀錄失敗</button>
+            <button class="btn-success" onclick="addSuccess()">紀錄成功並結算</button>
+            <button class="btn-reset" onclick="if(confirm('確定要清空所有紀錄嗎？')) location.reload()">重置</button>
         </div>
 
         <table id="recordTable">
             <thead>
                 <tr>
-                    <th>成功序號</th>
-                    <th>該次總消耗 (含前面失敗)</th>
-                    <th>單次成功率 (1/n)</th>
+                    <th>#</th>
+                    <th>單次總消耗</th>
+                    <th>單次成功率</th>
                     <th>累計總消耗</th>
                     <th>總成功率</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
+
+        <div class="footer">
+            Developed by jimmytsai
+        </div>
     </div>
 
     <script>
-        let globalTotalConsumes = 0; // 歷史總消耗
-        let globalSuccessCount = 0;  // 歷史總成功
-        let currentCycleConsumes = 0; // 這一輪(尚未成功前)的消耗
+        let globalTotalConsumes = 0;
+        let globalSuccessCount = 0;
+        let currentCycleConsumes = 0;
 
         function updateUI() {
             document.getElementById('currentWait').innerText = currentCycleConsumes;
@@ -74,7 +177,6 @@
             const count = parseInt(document.getElementById('tries').value);
             if (isNaN(count) || count <= 0) return;
 
-            // 結算這一輪
             currentCycleConsumes += count;
             globalTotalConsumes += count;
             globalSuccessCount++;
@@ -84,19 +186,20 @@
 
             const tbody = document.getElementById('recordTable').querySelector('tbody');
             const row = tbody.insertRow();
+            row.style.animation = "fadeIn 0.5s";
+            
             row.innerHTML = `
                 <td>${globalSuccessCount}</td>
-                <td>${currentCycleConsumes}</td>
-                <td class="highlight">${singleRate}</td>
+                <td style="color:var(--accent-green)">${currentCycleConsumes}</td>
+                <td class="highlight-blue">${singleRate}</td>
                 <td>${globalTotalConsumes}</td>
-                <td>${overallRate}</td>
+                <td style="color:var(--accent-blue)">${overallRate}</td>
             `;
 
-            // 重置這一輪的計數
             currentCycleConsumes = 0;
             updateUI();
             document.getElementById('tries').value = 1;
-            window.scrollTo(0, document.body.scrollHeight);
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
     </script>
 </body>
