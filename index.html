@@ -3,204 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Artale 墊卷紀錄器</title>
+    <title>Maple Scroll Tracker v8 - By jimmytsai</title>
     <style>
         :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #2d2d2d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
             --text-main: #e0e0e0;
             --accent-green: #2ecc71;
-            --accent-red: #e74c3c;
+            --accent-red: #ff4757;
             --accent-blue: #3498db;
-            --border-color: #404040;
+            --accent-yellow: #f1c40f;
+            --border-color: #333;
         }
 
-        body { 
-            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; 
-            padding: 20px; 
-            background: var(--bg-color); 
-            color: var(--text-main);
-            margin: 0;
-        }
-
-        .container { 
-            max-width: 900px; 
-            margin: auto; 
-            background: var(--card-bg); 
-            padding: 30px; 
-            border-radius: 16px; 
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5); 
-        }
-
-        h2 { text-align: center; color: var(--accent-blue); margin-top: 0; letter-spacing: 2px; }
-
-        .status-bar { 
-            background: rgba(255,255,255,0.05); 
-            padding: 15px; 
-            border-radius: 10px; 
-            margin-bottom: 25px; 
-            display: flex; 
-            justify-content: space-around; 
-            border: 1px solid var(--border-color);
-        }
-
-        .status-item { text-align: center; }
-        .status-label { font-size: 0.85rem; color: #888; display: block; margin-bottom: 5px; }
-        .status-value { font-size: 1.2rem; font-weight: bold; }
-
-        .controls { 
-            display: flex; 
-            gap: 12px; 
-            align-items: center; 
-            justify-content: center;
-            margin-bottom: 30px; 
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-        }
-
-        input { 
-            padding: 12px; 
-            background: #121212;
-            border: 1px solid var(--border-color);
-            border-radius: 8px; 
-            width: 80px; 
-            font-size: 16px; 
-            color: white;
-            text-align: center;
-        }
-
-        button { 
-            padding: 12px 24px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: transform 0.1s, opacity 0.2s;
-        }
-
-        button:active { transform: scale(0.95); }
-
-        .btn-success { background: var(--accent-green); color: #000; }
-        .btn-fail { background: var(--accent-red); color: white; }
-        .btn-reset { background: #555; color: white; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { 
-            background: #252525; 
-            color: #aaa; 
-            font-weight: 500; 
-            padding: 15px; 
-            border-bottom: 2px solid var(--border-color);
-        }
-        td { padding: 15px; border-bottom: 1px solid var(--border-color); text-align: center; }
-
-        .highlight-blue { color: var(--accent-blue); font-weight: bold; }
-        .accumulated { color: var(--accent-red); font-size: 1.4rem; }
+        body { font-family: "Segoe UI", "Microsoft JhengHei", sans-serif; background: var(--bg-color); color: var(--text-main); margin: 0; padding: 20px; }
+        .container { max-width: 850px; margin: auto; background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); }
         
-        .footer { 
-            margin-top: 30px; 
-            text-align: right; 
-            font-size: 0.8rem; 
-            color: #666; 
-            font-style: italic;
-        }
+        h2 { text-align: center; color: var(--accent-blue); margin-bottom: 25px; font-weight: 300; letter-spacing: 3px; }
 
-        /* 滾動條美化 */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1a1a1a; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        /* 即時監測儀錶板 */
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-box { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid var(--border-color); }
+        .stat-label { font-size: 0.75rem; color: #888; display: block; margin-bottom: 8px; }
+        .stat-value { font-size: 1.4rem; font-weight: bold; font-family: 'Courier New', Courier, monospace; }
+
+        .controls { display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 25px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px; }
+        input { padding: 12px; background: #000; border: 1px solid var(--border-color); border-radius: 6px; width: 70px; color: var(--accent-yellow); font-size: 1.1rem; text-align: center; }
+        
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-fail { background: var(--accent-red); color: white; }
+        .btn-success { background: var(--accent-green); color: #000; }
+        .btn-reset { background: #444; color: #ccc; font-size: 0.8rem; }
+        button:hover { opacity: 0.8; transform: translateY(-1px); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: #252525; color: #777; padding: 12px; border-bottom: 2px solid var(--border-color); text-align: center; }
+        td { padding: 12px; border-bottom: 1px solid var(--border-color); text-align: center; }
+        
+        .footer { margin-top: 25px; text-align: right; font-size: 0.75rem; color: #444; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>ARTALE SCROLL TRACKER</h2>
-        
-        <div class="status-bar">
-            <div class="status-item">
-                <span class="status-label">當前累積消耗 (未成功)</span>
-                <span id="currentWait" class="status-value accumulated">0</span>
-            </div>
-            <div class="status-item">
-                <span class="status-label">總成功紀錄</span>
-                <span id="totalSuccDisplay" class="status-value" style="color:var(--accent-green)">0</span>
-            </div>
+
+<div class="container">
+    <h2>MAPLE SCROLL TRACKER</h2>
+    
+    <div class="dashboard">
+        <div class="stat-box">
+            <span class="stat-label">當前連爆次數</span>
+            <span id="currentWait" class="stat-value" style="color:var(--accent-red)">0</span>
         </div>
-
-        <div class="controls">
-            <span>消耗卷數：</span>
-            <input type="number" id="tries" value="1" min="1">
-            <button class="btn-fail" onclick="addFail()">紀錄失敗</button>
-            <button class="btn-success" onclick="addSuccess()">紀錄成功並結算</button>
-            <button class="btn-reset" onclick="if(confirm('確定要清空所有紀錄嗎？')) location.reload()">重置</button>
+        <div class="stat-box">
+            <span class="stat-label">即時總成功率</span>
+            <span id="realtimeRate" class="stat-value" style="color:var(--accent-yellow)">0.00%</span>
         </div>
-
-        <table id="recordTable">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>單次消耗</th>
-                    <th>單次成功率</th>
-                    <th>累計總消耗</th>
-                    <th>總成功率</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-        <div class="footer">
-            Developed by jimmytsai
+        <div class="stat-box">
+            <span class="stat-label">已成功次數</span>
+            <span id="totalSuccDisplay" class="stat-value" style="color:var(--accent-green)">0</span>
         </div>
     </div>
 
-    <script>
-        let globalTotalConsumes = 0;
-        let globalSuccessCount = 0;
-        let currentCycleConsumes = 0;
+    <div class="controls">
+        <input type="number" id="tries" value="1" min="1">
+        <button class="btn-fail" onclick="addFail()">紀錄失敗</button>
+        <button class="btn-success" onclick="addSuccess()">成功結算</button>
+        <button class="btn-reset" onclick="if(confirm('確定清空？')) location.reload()">重置</button>
+    </div>
 
-        function updateUI() {
-            document.getElementById('currentWait').innerText = currentCycleConsumes;
-            document.getElementById('totalSuccDisplay').innerText = globalSuccessCount;
-        }
+    <table id="recordTable">
+        <thead>
+            <tr>
+                <th>成功序號</th>
+                <th>消耗(n)</th>
+                <th>機率(1/n)</th>
+                <th>累計消耗</th>
+                <th>結算成功率</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
 
-        function addFail() {
-            const count = parseInt(document.getElementById('tries').value);
-            if (isNaN(count) || count <= 0) return;
-            
-            currentCycleConsumes += count;
-            globalTotalConsumes += count;
-            updateUI();
-            document.getElementById('tries').value = 1;
-        }
+    <div class="footer">Author: jimmytsai | v8.0 Dark Precision</div>
+</div>
 
-        function addSuccess() {
-            const count = parseInt(document.getElementById('tries').value);
-            if (isNaN(count) || count <= 0) return;
+<script>
+    let totalConsumes = 0;
+    let totalSuccess = 0;
+    let currentWait = 0;
 
-            currentCycleConsumes += count;
-            globalTotalConsumes += count;
-            globalSuccessCount++;
+    function updateDashboard() {
+        document.getElementById('currentWait').innerText = currentWait;
+        document.getElementById('totalSuccDisplay').innerText = totalSuccess;
+        
+        // 即時計算總成功率 (避免除以 0)
+        const rate = totalConsumes > 0 ? ((totalSuccess / totalConsumes) * 100).toFixed(2) : "0.00";
+        document.getElementById('realtimeRate').innerText = rate + "%";
+    }
 
-            const singleRate = ((1 / currentCycleConsumes) * 100).toFixed(2) + '%';
-            const overallRate = ((globalSuccessCount / globalTotalConsumes) * 100).toFixed(2) + '%';
+    function addFail() {
+        const val = parseInt(document.getElementById('tries').value);
+        if (isNaN(val) || val <= 0) return;
+        
+        currentWait += val;
+        totalConsumes += val;
+        updateDashboard();
+        document.getElementById('tries').value = 1;
+    }
 
-            const tbody = document.getElementById('recordTable').querySelector('tbody');
-            const row = tbody.insertRow();
-            row.style.animation = "fadeIn 0.5s";
-            
-            row.innerHTML = `
-                <td>${globalSuccessCount}</td>
-                <td style="color:var(--accent-green)">${currentCycleConsumes}</td>
-                <td class="highlight-blue">${singleRate}</td>
-                <td>${globalTotalConsumes}</td>
-                <td style="color:var(--accent-blue)">${overallRate}</td>
-            `;
+    function addSuccess() {
+        const val = parseInt(document.getElementById('tries').value);
+        if (isNaN(val) || val <= 0) return;
 
-            currentCycleConsumes = 0;
-            updateUI();
-            document.getElementById('tries').value = 1;
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
-    </script>
+        currentWait += val;
+        totalConsumes += val;
+        totalSuccess++;
+
+        const singleRate = ((1 / currentWait) * 100).toFixed(2) + '%';
+        const finalRate = ((totalSuccess / totalConsumes) * 100).toFixed(2) + '%';
+
+        const tbody = document.getElementById('recordTable').querySelector('tbody');
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${totalSuccess}</td>
+            <td style="color:var(--accent-green)">${currentWait}</td>
+            <td style="color:var(--accent-blue)">${singleRate}</td>
+            <td>${totalConsumes}</td>
+            <td style="color:var(--accent-yellow)">${finalRate}</td>
+        `;
+
+        currentWait = 0;
+        updateDashboard();
+        document.getElementById('tries').value = 1;
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+</script>
+
 </body>
 </html>
