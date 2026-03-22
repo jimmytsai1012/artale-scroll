@@ -1,55 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
-    <title>楓之谷墊卷紀錄器</title>
+    <meta charset="UTF-8">
+    <title>楓之谷墊卷紀錄器 v2</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background: #eee; }
+        body { font-family: "Microsoft JhengHei", sans-serif; padding: 20px; background: #f0f2f5; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .controls { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 80px; }
+        button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-fail { background: #dc3545; color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        th { background: #f8f9fa; color: #666; }
+        tr:nth-child(even) { background: #fafafa; }
+        .highlight { font-weight: bold; color: #007bff; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>墊卷數據追蹤</h2>
-        <label>本次消耗卷軸數：</label>
-        <input type="number" id="tries" value="1">
-        <button onclick="addRecord(true)">成功</button>
-        <button onclick="addRecord(false)">失敗 (僅紀錄消耗)</button>
-        
+    <div class="container">
+        <h2>🍁 墊卷數據觀測站</h2>
+        <div class="controls">
+            <span>本次墊卷消耗：</span>
+            <input type="number" id="tries" value="1" min="1">
+            <button class="btn-success" onclick="addRecord(true)">成功 (紀錄並重置)</button>
+            <button class="btn-fail" onclick="addRecord(false)">失敗 (僅增加消耗)</button>
+            <button onclick="resetAll()" style="background:#6c757d; color:white;">清除所有紀錄</button>
+        </div>
+
         <table id="recordTable">
             <thead>
                 <tr>
                     <th>序號</th>
                     <th>結果</th>
-                    <th>單次消耗</th>
-                    <th>總消耗</th>
+                    <th>本次消耗 (失敗次數+1)</th>
+                    <th>單次成功率 (1/消耗)</th>
+                    <th>累計總消耗</th>
                     <th>總成功率</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+                </tbody>
         </table>
     </div>
 
     <script>
         let totalConsumes = 0;
-        let totalSuccess = 0;
-        let recordCount = 0;
+        let totalSuccessCount = 0;
+        let currentBatchTries = 0; // 紀錄目前這一次成功前累積的失敗+最後一次成功
 
         function addRecord(isSuccess) {
-            const tries = parseInt(document.getElementById('tries').value);
-            totalConsumes += tries;
-            if(isSuccess) {
-                totalSuccess++;
-                recordCount++;
-                const rate = ((totalSuccess / totalConsumes) * 100).toFixed(2) + '%';
+            const inputVal = parseInt(document.getElementById('tries').value);
+            if (isNaN(inputVal) || inputVal <= 0) return alert("請輸入有效的次數");
+
+            currentBatchTries += inputVal;
+            totalConsumes += inputVal;
+
+            if (isSuccess) {
+                totalSuccessCount++;
+                const singleRate = ((1 / currentBatchTries) * 100).toFixed(2) + '%';
+                const overallRate = ((totalSuccessCount / totalConsumes) * 100).toFixed(2) + '%';
                 
-                const table = document.getElementById('recordTable').getElementsByTagName('tbody')[0];
-                const row = table.insertRow(0); // 新紀錄在最上方
-                row.innerHTML = `<td>${recordCount}</td><td>成功</td><td>${tries}</td><td>${totalConsumes}</td><td>${rate}</td>`;
+                const tbody = document.getElementById('recordTable').querySelector('tbody');
+                const row = tbody.insertRow(); // insertRow() 預設就是加在最後面（由上往下）
+                
+                row.innerHTML = `
+                    <td>${totalSuccessCount}</td>
+                    <td style="color:green; font-weight:bold;">成功</td>
+                    <td>${currentBatchTries}</td>
+                    <td class="highlight">${singleRate}</td>
+                    <td>${totalConsumes}</td>
+                    <td>${overallRate}</td>
+                `;
+                
+                // 成功後重置當前批次計數
+                currentBatchTries = 0;
+                document.getElementById('tries').value = 1;
+                window.scrollTo(0, document.body.scrollHeight); // 自動捲動到底部
             } else {
-                alert(`已累計消耗 ${tries} 卷，目前總消耗: ${totalConsumes}`);
+                alert(`目前此輪已累計消耗：${currentBatchTries} 卷`);
+                document.getElementById('tries').value = 1;
+            }
+        }
+
+        function resetAll() {
+            if(confirm("確定要清空所有數據嗎？")) {
+                location.reload();
             }
         }
     </script>
